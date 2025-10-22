@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meeds • Dashboard Multicidades</title>
+  <style>
+    :root { --bg:#070b1a; --surface:#0b1025; --glass:rgba(255,255,255,.06); --border:rgba(160,200,255,.18); --text:#e7efff; --muted:#9fb2d8; --radius:14px; --shadow:0 12px 30px rgba(0,0,0,.35); --maxw:980px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--text); background: radial-gradient(1200px 600px at 10% -10%, #0f1640, var(--bg)); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    .appbar { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(8px); background: linear-gradient(90deg, rgba(11,16,37,.8), rgba(11,16,37,.5)); border-bottom: 1px solid var(--border); }
+    .appbar-inner { max-width: var(--maxw); margin: 0 auto; padding: 10px 18px; display: flex; align-items: center; gap: 10px; }
+    .orb { width: 12px; height: 12px; border-radius: 999px; background: radial-gradient(circle at 30% 30%, #6ae2ff, #8a6bff); box-shadow: 0 0 18px #6ae2ff; }
+    .subtitle { color: var(--muted); font-size: 12px; margin-left: auto; }
+    .container { max-width: var(--maxw); margin: 0 auto; padding: 18px; }
+    h1 { margin: 16px 0 6px; font-size: 26px; letter-spacing: .2px; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+    .selector { display: flex; gap: 8px; align-items: center; }
+    select { background: #0e1529; color: var(--text); border: 1px solid #203156; border-radius: 10px; padding: 6px 10px; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 10px; margin-top: 12px; }
+    .kpi { background: var(--glass); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+    .kpi .label { font-size: 12px; color: var(--muted); }
+    .kpi .value { font-size: 22px; font-weight: 700; }
+    .cards, .chart, .panel { background: var(--glass); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); margin-top: 12px; }
+    .cards-inner { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 10px; }
+    .card { background: rgba(255,255,255,.04); border:1px solid rgba(160,200,255,.12); border-radius: 12px; padding: 12px; }
+    .card h3 { margin: 0 0 6px; font-size: 15px; color:#dff1ff; }
+    .card p { margin: 0; font-size: 13px; color: var(--muted); }
+    .chart h3 { margin: 0 0 8px; font-size: 16px; }
+    canvas { width: 100%; height: 280px; display: block; }
+    .controls { display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items:center; }
+    @media (max-width: 560px) { .controls { grid-template-columns: 1fr; } }
+    input[type="text"], input[type="date"], button { width:100%; background:#0e1529; color:var(--text); border:1px solid #203156; border-radius:10px; padding:8px 10px; }
+    table { width:100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-bottom: 1px dashed #203156; padding: 9px; font-size: 14px; }
+    th { color:#cfe1ff; text-align:left; background:#0e1529; position: sticky; top: 0; z-index: 1; }
+    tbody tr:hover { background: rgba(106,226,255,.06); }
+    .total { margin-top: 12px; padding: 10px; background: rgba(122, 223, 255, .08); border: 1px solid rgba(122,223,255,.25); border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <div class="appbar">
+    <div class="appbar-inner">
+      <span class="orb"></span>
+      <strong>Meeds • Dashboard Multicidades</strong>
+      <span class="subtitle">Gerado em 22/10/2025 15:37</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <div>
+        <h1>Resumo de Atendimentos Dos Médicos</h1>
+        <p class="city">Município: <strong id="cityName">Coronel Fabriciano</strong></p>
+      </div>
+      <div class="selector">
+        <label for="city">Cidade:</label>
+        <select id="city">
+          <option>Coronel Fabriciano</option>
+          <option>Ouro Branco</option>
+          <option>Igaratinga</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total de atendimentos</div><div class="value" id="kpiTotal">0</div></div>
+      <div class="kpi"><div class="label">Médicos únicos</div><div class="value" id="kpiMedicos">0</div></div>
+      <div class="kpi"><div class="label">Dias cobertos</div><div class="value" id="kpiDias">0</div></div>
+    </div>
+
+    <div class="cards">
+      <div class="cards-inner" id="cardsTop"></div>
+    </div>
+
+    <div class="chart">
+      <h3>Top 3 Médicos</h3>
+      <canvas id="chart"></canvas>
+    </div>
+
+    <div class="panel">
+      <div class="controls">
+        <input type="text" id="q" placeholder="Buscar por médico ou data (dd/mm/aaaa)" />
+        <input type="date" id="start" />
+        <input type="date" id="end" />
+        <button id="clear">Limpar</button>
+      </div>
+      <table class="table" id="tabela">
+        <thead>
+          <tr><th>Data</th><th>Atendido Por</th><th>Qtd Atendimentos</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="total">Total geral (considerando filtros): <strong id="total">0</strong></div>
+    </div>
+  </div>
+
+  <script>
+    const datasets = {
+      "Coronel Fabriciano": [{'Data': '01/10/2025', 'Atendido Por': 'GUILHERME VENÂNCIO DA SILVA NETO', 'Qtd Atendimentos': 9}, {'Data': '01/10/2025', 'Atendido Por': 'MARCELO DREY GONÇALVES', 'Qtd Atendimentos': 4}, {'Data': '02/10/2025', 'Atendido Por': 'NEMER MARTINS TARRAF', 'Qtd Atendimentos': 7}, {'Data': '03/10/2025', 'Atendido Por': 'KAREN SANTOS LIMA', 'Qtd Atendimentos': 4}, {'Data': '06/10/2025', 'Atendido Por': 'DAFNE MARIA VILLAR GONCALVES', 'Qtd Atendimentos': 2}, {'Data': '06/10/2025', 'Atendido Por': 'NEMER MARTINS TARRAF', 'Qtd Atendimentos': 5}, {'Data': '07/10/2025', 'Atendido Por': 'DAFNE MARIA VILLAR GONCALVES', 'Qtd Atendimentos': 10}, {'Data': '07/10/2025', 'Atendido Por': 'NEMER MARTINS TARRAF', 'Qtd Atendimentos': 7}, {'Data': '08/10/2025', 'Atendido Por': 'GUILHERME VENÂNCIO DA SILVA NETO', 'Qtd Atendimentos': 2}, {'Data': '15/10/2025', 'Atendido Por': 'GUILHERME VENÂNCIO DA SILVA NETO', 'Qtd Atendimentos': 4}, {'Data': '15/10/2025', 'Atendido Por': 'MARCELO DREY GONÇALVES', 'Qtd Atendimentos': 4}, {'Data': '16/10/2025', 'Atendido Por': 'GUILHERME VENÂNCIO DA SILVA NETO', 'Qtd Atendimentos': 9}, {'Data': '16/10/2025', 'Atendido Por': 'NEMER MARTINS TARRAF', 'Qtd Atendimentos': 7}, {'Data': '17/10/2025', 'Atendido Por': 'MARCELO DREY GONÇALVES', 'Qtd Atendimentos': 7}, {'Data': '20/10/2025', 'Atendido Por': 'NEMER MARTINS TARRAF', 'Qtd Atendimentos': 8}, {'Data': '21/10/2025', 'Atendido Por': 'DAFNE MARIA VILLAR GONCALVES', 'Qtd Atendimentos': 9}, {'Data': '21/10/2025', 'Atendido Por': 'NEMER MARTINS TARRAF', 'Qtd Atendimentos': 9}, {'Data': '22/10/2025', 'Atendido Por': 'GUILHERME HENRIQUE OLIVEIRA BORGES', 'Qtd Atendimentos': 2}],
+      "Ouro Branco": [{'Data': '01/10/2025', 'Atendido Por': 'BERNARDO XAVIER GOMES', 'Qtd Atendimentos': 8}, {'Data': '01/10/2025', 'Atendido Por': 'GABRIEL ZEFERINO DE OLIVEIRA SOUZA', 'Qtd Atendimentos': 4}, {'Data': '01/10/2025', 'Atendido Por': 'KEITH ANNY GONÇALVES CÓCOLO DE SOUZA', 'Qtd Atendimentos': 1}, {'Data': '01/10/2025', 'Atendido Por': 'VICTOR AMARAL FERREIRA DE AQUINO', 'Qtd Atendimentos': 11}, {'Data': '02/10/2025', 'Atendido Por': 'GABRIEL ZEFERINO DE OLIVEIRA SOUZA', 'Qtd Atendimentos': 3}, {'Data': '02/10/2025', 'Atendido Por': 'IARA OLIVEIRA ALVES', 'Qtd Atendimentos': 5}, {'Data': '02/10/2025', 'Atendido Por': 'KEITH ANNY GONÇALVES CÓCOLO DE SOUZA', 'Qtd Atendimentos': 6}, {'Data': '02/10/2025', 'Atendido Por': 'LEONARDO BERTOLATO RIBEIRO', 'Qtd Atendimentos': 1}, {'Data': '03/10/2025', 'Atendido Por': 'ANA CLARA DE ALMEIDA FREIRE', 'Qtd Atendimentos': 4}, {'Data': '03/10/2025', 'Atendido Por': 'ANDRÉ DA MATTA MACHADO FERNANDES', 'Qtd Atendimentos': 5}, {'Data': '03/10/2025', 'Atendido Por': 'LEONARDO BERTOLATO RIBEIRO', 'Qtd Atendimentos': 6}, {'Data': '06/10/2025', 'Atendido Por': 'GUILHERME HENRIQUE OLIVEIRA BORGES', 'Qtd Atendimentos': 3}, {'Data': '06/10/2025', 'Atendido Por': 'LIA MARIA BASTOS PEIXOTO LEITÃO', 'Qtd Atendimentos': 7}, {'Data': '07/10/2025', 'Atendido Por': 'ANA CLARA DE ALMEIDA FREIRE', 'Qtd Atendimentos': 2}, {'Data': '08/10/2025', 'Atendido Por': 'MARIANA CAMPOS', 'Qtd Atendimentos': 5}, {'Data': '08/10/2025', 'Atendido Por': 'VICTOR AMARAL FERREIRA DE AQUINO', 'Qtd Atendimentos': 8}, {'Data': '09/10/2025', 'Atendido Por': 'MÉDICO TESTE NOVETECH', 'Qtd Atendimentos': 3}, {'Data': '16/10/2025', 'Atendido Por': 'GABRIELLE SOUZA RAMOS', 'Qtd Atendimentos': 1}, {'Data': '16/10/2025', 'Atendido Por': 'IARA OLIVEIRA ALVES', 'Qtd Atendimentos': 4}, {'Data': '16/10/2025', 'Atendido Por': 'KEITH ANNY GONÇALVES CÓCOLO DE SOUZA', 'Qtd Atendimentos': 7}, {'Data': '17/10/2025', 'Atendido Por': 'ANDRÉ DA MATTA MACHADO FERNANDES', 'Qtd Atendimentos': 5}, {'Data': '17/10/2025', 'Atendido Por': 'LEONARDO BERTOLATO RIBEIRO', 'Qtd Atendimentos': 6}, {'Data': '20/10/2025', 'Atendido Por': 'BARBARA PACHECO DE ASSIS', 'Qtd Atendimentos': 5}, {'Data': '20/10/2025', 'Atendido Por': 'GUILHERME HENRIQUE OLIVEIRA BORGES', 'Qtd Atendimentos': 2}, {'Data': '20/10/2025', 'Atendido Por': 'LIA MARIA BASTOS PEIXOTO LEITÃO', 'Qtd Atendimentos': 5}, {'Data': '21/10/2025', 'Atendido Por': 'MARIANA CAMPOS', 'Qtd Atendimentos': 2}, {'Data': '22/10/2025', 'Atendido Por': 'GABRIEL ZEFERINO DE OLIVEIRA SOUZA', 'Qtd Atendimentos': 2}, {'Data': '22/10/2025', 'Atendido Por': 'VICTOR AMARAL FERREIRA DE AQUINO', 'Qtd Atendimentos': 5}],
+      "Igaratinga": [{'Data': '03/10/2025', 'Atendido Por': 'RÂNIA ANDRADE LIMA', 'Qtd Atendimentos': 2}, {'Data': '06/10/2025', 'Atendido Por': 'RÂNIA ANDRADE LIMA', 'Qtd Atendimentos': 3}, {'Data': '06/10/2025', 'Atendido Por': 'TANDÊ SALTARELLI MARTINS', 'Qtd Atendimentos': 2}, {'Data': '14/10/2025', 'Atendido Por': 'JULIANA CAROLINE DE PAULA MOREIRA', 'Qtd Atendimentos': 1}, {'Data': '15/10/2025', 'Atendido Por': 'JULIANA CAROLINE DE PAULA MOREIRA', 'Qtd Atendimentos': 7}, {'Data': '16/10/2025', 'Atendido Por': 'JULIANA CAROLINE DE PAULA MOREIRA', 'Qtd Atendimentos': 3}, {'Data': '17/10/2025', 'Atendido Por': 'MARIA CECILIA CARVALHO CORRADO', 'Qtd Atendimentos': 2}, {'Data': '17/10/2025', 'Atendido Por': 'RÂNIA ANDRADE LIMA', 'Qtd Atendimentos': 1}, {'Data': '20/10/2025', 'Atendido Por': 'RÂNIA ANDRADE LIMA', 'Qtd Atendimentos': 2}, {'Data': '20/10/2025', 'Atendido Por': 'TANDÊ SALTARELLI MARTINS', 'Qtd Atendimentos': 3}, {'Data': '21/10/2025', 'Atendido Por': 'JULIANA CAROLINE DE PAULA MOREIRA', 'Qtd Atendimentos': 4}, {'Data': '21/10/2025', 'Atendido Por': 'KAROLINE SPÓSITO DAS VIRGENS', 'Qtd Atendimentos': 2}, {'Data': '22/10/2025', 'Atendido Por': 'JULIANA CAROLINE DE PAULA MOREIRA', 'Qtd Atendimentos': 1}]
+    };
+
+    const citySel = document.getElementById('city');
+    const cityName = document.getElementById('cityName');
+    const tbody = document.querySelector('#tabela tbody');
+    const q = document.getElementById('q');
+    const start = document.getElementById('start');
+    const end = document.getElementById('end');
+    const clearBtn = document.getElementById('clear');
+    const kpiTotal = document.getElementById('kpiTotal');
+    const kpiMedicos = document.getElementById('kpiMedicos');
+    const kpiDias = document.getElementById('kpiDias');
+    const totalEl = document.getElementById('total');
+    const cardsTop = document.getElementById('cardsTop');
+    const chartCanvas = document.getElementById('chart');
+    const ctx = chartCanvas.getContext('2d');
+
+    function parseBR(d) {
+      const [dd, mm, yyyy] = d.split('/');
+      return new Date(`${yyyy}-${mm}-${dd}`);
+    }
+
+    function renderTable(rows) {
+      tbody.innerHTML = rows.map(r => `<tr><td>${r["Data"]||""}</td><td>${r["Atendido Por"]||""}</td><td>${r["Qtd Atendimentos"]||0}</td></tr>`).join('');
+    }
+
+    function applyFilters() {
+      const txt = (q.value || '').toLowerCase();
+      const sVal = start.value ? new Date(start.value) : null;
+      const eVal = end.value ? new Date(end.value) : null;
+      Array.from(tbody.rows).forEach(tr => {
+        const dataText = tr.cells[0].innerText.trim();
+        const medico = tr.cells[1].innerText.toLowerCase();
+        const d = dataText ? parseBR(dataText) : null;
+        let show = true;
+        if (txt && !medico.includes(txt) && !dataText.includes(txt)) show = false;
+        if (sVal && d && d < sVal) show = false;
+        if (eVal && d && d > eVal) show = false;
+        tr.style.display = show ? '' : 'none';
+      });
+      recomputeTotal();
+    }
+
+    function recomputeTotal() {
+      let total = 0;
+      Array.from(tbody.rows).forEach(tr => {
+        if (tr.style.display === 'none') return;
+        total += Number(tr.cells[2].innerText) || 0;
+      });
+      totalEl.textContent = total.toLocaleString('pt-BR');
+    }
+
+    function computeKPIs(rows) {
+      const total = rows.reduce((s, r) => s + (Number(r["Qtd Atendimentos"])||0), 0);
+      const medicos = [...new Set(rows.map(r => r["Atendido Por"]))].filter(Boolean).length;
+      const dias = [...new Set(rows.map(r => r["Data"]))].filter(Boolean).length;
+      kpiTotal.textContent = total.toLocaleString('pt-BR');
+      kpiMedicos.textContent = medicos;
+      kpiDias.textContent = dias;
+    }
+
+    function computeTop3(rows) {
+      const map = new Map();
+      rows.forEach(r => {
+        const k = r["Atendido Por"] || "";
+        const v = Number(r["Qtd Atendimentos"]) || 0;
+        map.set(k, (map.get(k)||0) + v);
+      });
+      return Array.from(map.entries())
+        .filter(([k]) => k)
+        .sort((a,b)=>b[1]-a[1]).slice(0,3);
+    }
+
+    function drawChart(top) {
+      const W = chartCanvas.clientWidth;
+      const H = chartCanvas.clientHeight;
+      chartCanvas.width = W * devicePixelRatio;
+      chartCanvas.height = H * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+      ctx.clearRect(0,0,W,H);
+      const padding = 40;
+      const innerW = W - padding*2;
+      const innerH = H - padding*2;
+      const maxVal = Math.max(1, ...top.map(t => t[1]));
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, H - padding);
+      ctx.lineTo(W - padding, H - padding);
+      ctx.stroke();
+      const n = top.length;
+      const barW = n ? innerW / (n*1.5) : 0;
+      const gap = n ? (innerW - barW*n) / (n+1) : 0;
+      ctx.fillStyle = "rgba(255, 199, 0, 0.85)";
+      ctx.textAlign = "center";
+      ctx.font = "12px system-ui";
+      top.forEach(([name,val], i) => {
+        const x = padding + gap*(i+1) + barW*i;
+        const h = (val / maxVal) * (innerH - 10);
+        const y = H - padding - h;
+        ctx.fillRect(x, y, barW, h);
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fillText(String(name).slice(0,18), x + barW/2, H - padding + 14);
+        ctx.fillText(val, x + barW/2, y - 6);
+        ctx.fillStyle = "rgba(255, 199, 0, 0.85)";
+      });
+    }
+
+    function renderCards(top) {
+      cardsTop.innerHTML = top.map(([name,val]) => `
+        <div class="card"><h3>${name}</h3><p>Top • Total: <strong>${val}</strong></p></div>
+      `).join('') || '<div class="card"><p>Sem dados</p></div>';
+    }
+
+    function loadCity() {
+      const city = citySel.value;
+      cityName.textContent = city;
+      const rows = datasets[city] || [];
+      renderTable(rows);
+      computeKPIs(rows);
+      const top = computeTop3(rows);
+      renderCards(top);
+      drawChart(top);
+      applyFilters();
+    }
+
+    citySel.addEventListener('change', loadCity);
+    q.addEventListener('input', applyFilters);
+    start.addEventListener('change', applyFilters);
+    end.addEventListener('change', applyFilters);
+    clearBtn.addEventListener('click', () => { q.value=''; start.value=''; end.value=''; applyFilters(); });
+    window.addEventListener('resize', () => drawChart(computeTop3(datasets[citySel.value]||[])));
+
+    loadCity();
+  </script>
+</body>
+</html>
