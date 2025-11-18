@@ -5,8 +5,7 @@
 <title>Meeds • Dashboard Multicidades (Somente últimos arquivos)</title>
 <style>
   :root{--bg:#070b1a;--surface:#0b1025;--glass:rgba(255,255,255,.06);--border:rgba(160,200,255,.18);--text:#e7efff;--muted:#9fb2d8;--radius:14px;--shadow:0 12px 30px rgba(0,0,0,.35);--maxw:980px;--accent:#FFC700}
-  *{box-sizing:border-box}
-  body{margin:0;color:var(--text);background:radial-gradient(1200px 600px at 10% -10%, #0f1640, var(--bg));font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  *{box-sizing:border-box}body{margin:0;color:var(--text);background:radial-gradient(1200px 600px at 10% -10%, #0f1640, var(--bg));font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
   .appbar{position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);background:linear-gradient(90deg, rgba(11,16,37,.85), rgba(11,16,37,.6));border-bottom:1px solid var(--border)}
   .appbar-inner{max-width:var(--maxw);margin:0 auto;padding:10px 18px;display:flex;gap:10px;align-items:center}
   .orb{width:12px;height:12px;border-radius:999px;background:radial-gradient(circle at 30% 30%, var(--accent), #ffae00);box-shadow:0 0 18px var(--accent)}
@@ -21,63 +20,25 @@
   .seg button.active{background:rgba(255,199,0,.12);color:#ffe88b}
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}
   .kpi{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
-  .kpi .label{font-size:12px;color:var(--muted)}
-  .kpi .value{font-size:22px;font-weight:700;color:var(--accent)}
+  .kpi .label{font-size:12px;color:var(--muted)}.kpi .value{font-size:22px;font-weight:700;color:var(--accent)}
   .cards,.chart,.panel{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);margin-top:12px}
   .cards-inner{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
   .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,199,0,.4);border-radius:12px;padding:12px}
-  .card h3{margin:0 0 4px;font-size:15px;color:#ffe88b}
-  .card p{margin:0;font-size:13px;color:var(--muted)}
+  .card h3{margin:0 0 4px;font-size:15px;color:#ffe88b}.card p{margin:0;font-size:13px;color:var(--muted)}
   .chart h3{margin:0 0 8px;font-size:16px;color:var(--accent)}
   canvas{width:100%;height:280px;display:block}
-  table{width:100%;border-collapse:collapse;margin-top:10px}
-  th,td{border-bottom:1px dashed #203156;padding:9px;font-size:14px}
-  th{color:#cfe1ff;text-align:left;background:#0e1529;position:sticky;top:0;z-index:1}
-  tbody tr:hover{background:rgba(255,199,0,.06)}
+  table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border-bottom:1px dashed #203156;padding:9px;font-size:14px}
+  th{color:#cfe1ff;text-align:left;background:#0e1529;position:sticky;top:0;z-index:1}tbody tr:hover{background:rgba(255,199,0,.06)}
   .total{margin-top:12px;padding:10px;background:rgba(255,199,0,.1);border:1px solid rgba(255,199,0,.3);border-radius:12px}
-
-  .upload-excel {
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding:8px 12px;
-    border-radius:10px;
-    border:1px solid #203156;
-    background:#0e1529;
-    color:#e7efff;
-    font-size:13px;
-    cursor:pointer;
-    white-space:nowrap;
-    justify-content:center;
-  }
-  .upload-excel:hover {
-    background:rgba(255,199,0,0.12);
-    border-color:rgba(255,199,0,0.5);
-  }
 </style>
 </head>
 <body>
-  <div class="appbar">
-    <div class="appbar-inner">
-      <span class="orb"></span>
-      <strong>Meeds • Dashboard Multicidades</strong>
-      <span class="subtitle">Atualizado em 12/11/2025 21:26</span>
-    </div>
-  </div>
+  <div class="appbar"><div class="appbar-inner"><span class="orb"></span><strong>Meeds • Dashboard Multicidades</strong><span class="subtitle">Atualizado em 12/11/2025 21:26</span></div></div>
   <div class="container">
     <div class="row">
-      <div>
-        <h1>Resumo de Atendimentos Dos Médicos</h1>
-        <p class="city">Município: <strong id="cityName">Coronel Fabriciano</strong></p>
-      </div>
-      <div class="selector">
-        <label for="city">Cidade:</label>
-        <select id="city">
-          <option>Macaé</option>
-          <option>Coronel Fabriciano</option>
-          <option>Ouro Branco</option>
-          <option>Igaratinga</option>
-        </select>
+      <div><h1>Resumo de Atendimentos Dos Médicos</h1><p class="city">Município: <strong id="cityName">Coronel Fabriciano</strong></p></div>
+      <div class="selector"><label for="city">Cidade:</label>
+        <select id="city"><option>Macaé</option><option>Coronel Fabriciano</option><option>Ouro Branco</option><option>Igaratinga</option></select>
       </div>
       <div class="selector" style="justify-self:end">
         <div class="seg" id="monthSeg">
@@ -94,348 +55,49 @@
     <div class="cards"><div class="cards-inner" id="cardsTop"></div></div>
     <div class="chart"><h3>Top 3 Médicos</h3><canvas id="chart"></canvas></div>
     <div class="panel">
-      <div class="controls" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:8px;align-items:center">
+      <div class="controls" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:center">
         <input type="text" id="q" placeholder="Buscar por médico ou data (dd/mm/aaaa)"/>
-        <input type="date" id="start"/>
-        <input type="date" id="end"/>
-        <button id="clear">Limpar</button>
-        <label class="upload-excel">
-          📂 Carregar Excel
-          <input type="file" id="excelInput" accept=".xlsx,.xls" hidden>
-        </label>
+        <input type="date" id="start"/><input type="date" id="end"/><button id="clear">Limpar</button>
       </div>
-      <table id="tabela">
-        <thead><tr><th>Data</th><th>Atendido Por</th><th>Qtd Atendimentos</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <table id="tabela"><thead><tr><th>Data</th><th>Atendido Por</th><th>Qtd Atendimentos</th></tr></thead><tbody></tbody></table>
       <div class="total">Total geral (considerando filtros): <strong id="total">0</strong></div>
     </div>
   </div>
 
-<!-- Lib para ler Excel no navegador -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
 <script>
   const datasetsOut = {"Coronel Fabriciano": [{"Data": "01/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 9}, {"Data": "01/10/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 4}, {"Data": "02/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 7}, {"Data": "03/10/2025", "Atendido Por": "KAREN SANTOS LIMA", "Qtd Atendimentos": 4}, {"Data": "06/10/2025", "Atendido Por": "DAFNE MARIA VILLAR GONCALVES", "Qtd Atendimentos": 2}, {"Data": "06/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 5}, {"Data": "07/10/2025", "Atendido Por": "DAFNE MARIA VILLAR GONCALVES", "Qtd Atendimentos": 10}, {"Data": "07/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 7}, {"Data": "08/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 2}, {"Data": "15/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 4}, {"Data": "15/10/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 4}, {"Data": "16/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 9}, {"Data": "16/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 7}, {"Data": "17/10/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 7}, {"Data": "20/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 8}, {"Data": "21/10/2025", "Atendido Por": "DAFNE MARIA VILLAR GONCALVES", "Qtd Atendimentos": 9}, {"Data": "21/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 9}, {"Data": "22/10/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 2}, {"Data": "22/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 8}, {"Data": "23/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 3}, {"Data": "23/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 9}, {"Data": "24/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 7}], "Ouro Branco": [{"Data": "01/10/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Qtd Atendimentos": 8}, {"Data": "01/10/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 4}, {"Data": "01/10/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 1}, {"Data": "01/10/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 11}, {"Data": "01/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "02/10/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 3}, {"Data": "02/10/2025", "Atendido Por": "IARA OLIVEIRA ALVES", "Qtd Atendimentos": 5}, {"Data": "02/10/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 6}, {"Data": "02/10/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 1}, {"Data": "02/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "03/10/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 4}, {"Data": "03/10/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Qtd Atendimentos": 5}, {"Data": "03/10/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 6}, {"Data": "03/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "06/10/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 3}, {"Data": "06/10/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 7}, {"Data": "06/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "07/10/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 2}, {"Data": "07/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "08/10/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 5}, {"Data": "08/10/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 8}, {"Data": "08/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "09/10/2025", "Atendido Por": "MÉDICO TESTE NOVETECH", "Qtd Atendimentos": 3}, {"Data": "16/10/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Qtd Atendimentos": 1}, {"Data": "16/10/2025", "Atendido Por": "IARA OLIVEIRA ALVES", "Qtd Atendimentos": 4}, {"Data": "16/10/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 7}, {"Data": "17/10/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Qtd Atendimentos": 5}, {"Data": "17/10/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 6}, {"Data": "20/10/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Qtd Atendimentos": 5}, {"Data": "20/10/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 2}, {"Data": "20/10/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 5}, {"Data": "21/10/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 2}, {"Data": "22/10/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Qtd Atendimentos": 7}, {"Data": "22/10/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 4}, {"Data": "22/10/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 5}, {"Data": "23/10/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Qtd Atendimentos": 1}, {"Data": "23/10/2025", "Atendido Por": "IARA OLIVEIRA ALVES", "Qtd Atendimentos": 3}, {"Data": "23/10/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 8}], "Igaratinga": [{"Data": "02/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "03/10/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 2}, {"Data": "06/10/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 3}, {"Data": "06/10/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 2}, {"Data": "14/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 1}, {"Data": "15/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 7}, {"Data": "16/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 3}, {"Data": "17/10/2025", "Atendido Por": "MARIA CECILIA CARVALHO CORRADO", "Qtd Atendimentos": 2}, {"Data": "17/10/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 1}, {"Data": "20/10/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 2}, {"Data": "20/10/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 3}, {"Data": "21/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 4}, {"Data": "21/10/2025", "Atendido Por": "KAROLINE SPÓSITO DAS VIRGENS", "Qtd Atendimentos": 2}, {"Data": "22/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 7}, {"Data": "23/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 5}, {"Data": "23/10/2025", "Atendido Por": "VIVIAN OLIVEIRA VIANA", "Qtd Atendimentos": 2}, {"Data": "24/10/2025", "Atendido Por": "MARIA CECILIA CARVALHO CORRADO", "Qtd Atendimentos": 1}, {"Data": "27/10/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 1}]};
   const datasetsNov = {"Ouro Branco": [{"Data": "03/11/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 5}, {"Data": "03/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Qtd Atendimentos": 4}, {"Data": "03/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 2}, {"Data": "04/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 2}, {"Data": "04/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Qtd Atendimentos": 10}, {"Data": "05/11/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 7}, {"Data": "05/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 4}, {"Data": "06/11/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 5}, {"Data": "06/11/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Qtd Atendimentos": 4}, {"Data": "06/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 2}, {"Data": "07/11/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 4}, {"Data": "07/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 2}, {"Data": "07/11/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Qtd Atendimentos": 1}, {"Data": "07/11/2025", "Atendido Por": "JOSE SONGLEI DA SILVA ROCHA", "Qtd Atendimentos": 1}, {"Data": "07/11/2025", "Atendido Por": "JOYCE CARVALHO MARTINS", "Qtd Atendimentos": 1}, {"Data": "10/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Qtd Atendimentos": 7}, {"Data": "10/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 4}, {"Data": "10/11/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 3}, {"Data": "11/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 1}, {"Data": "12/11/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 5}, {"Data": "12/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 2}, {"Data": "12/11/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Qtd Atendimentos": 1}, {"Data": "12/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Qtd Atendimentos": 1}], "Igaratinga": [{"Data": "03/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 1}, {"Data": "03/11/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 1}, {"Data": "04/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 3}, {"Data": "04/11/2025", "Atendido Por": "KAROLINE SPÓSITO DAS VIRGENS", "Qtd Atendimentos": 1}, {"Data": "04/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 10}, {"Data": "06/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 1}, {"Data": "10/11/2025", "Atendido Por": "JULIANA CRISTINA DE OLIVEIRA MIGUEL", "Qtd Atendimentos": 1}, {"Data": "11/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 2}, {"Data": "11/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 2}, {"Data": "12/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 2}], "Coronel Fabriciano": [{"Data": "05/11/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 8}, {"Data": "06/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 5}, {"Data": "07/11/2025", "Atendido Por": "KAREN SANTOS LIMA", "Qtd Atendimentos": 8}, {"Data": "10/11/2025", "Atendido Por": "BIANCA MALUF TARRAF", "Qtd Atendimentos": 7}, {"Data": "10/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 7}, {"Data": "11/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 8}, {"Data": "11/11/2025", "Atendido Por": "MARIANA BARBATO ZOCAL", "Qtd Atendimentos": 7}, {"Data": "12/11/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 9}, {"Data": "12/11/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 7}], "Macaé": [{"Data": "04/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 11}, {"Data": "04/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 4}, {"Data": "06/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 11}, {"Data": "07/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 8}, {"Data": "07/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 7}, {"Data": "10/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 21}, {"Data": "10/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 7}, {"Data": "11/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 26}, {"Data": "11/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 14}, {"Data": "12/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 23}, {"Data": "12/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 10}, {"Data": "12/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Qtd Atendimentos": 3}]};
-
   const datasetsByMonth = {"Outubro 2025": datasetsOut, "Novembro 2025": datasetsNov};
   let currentMonth = "Novembro 2025";
 
-  const citySel  = document.getElementById('city'),
-        cityName = document.getElementById('cityName');
-  const tbody    = document.querySelector('#tabela tbody'),
-        q        = document.getElementById('q');
-  const start    = document.getElementById('start'),
-        end      = document.getElementById('end'),
-        clearBtn = document.getElementById('clear');
-  const kpiTotal   = document.getElementById('kpiTotal'),
-        kpiMedicos = document.getElementById('kpiMedicos'),
-        kpiDias    = document.getElementById('kpiDias');
-  const totalEl     = document.getElementById('total');
-  const chartCanvas = document.getElementById('chart'),
-        ctx         = chartCanvas.getContext('2d');
-  const excelInput  = document.getElementById('excelInput');
-  const cardsTop    = document.getElementById('cardsTop');
+  const citySel = document.getElementById('city'), cityName = document.getElementById('cityName');
+  const tbody = document.querySelector('#tabela tbody'), q = document.getElementById('q');
+  const start = document.getElementById('start'), end = document.getElementById('end'), clearBtn = document.getElementById('clear');
+  const kpiTotal = document.getElementById('kpiTotal'), kpiMedicos = document.getElementById('kpiMedicos'), kpiDias = document.getElementById('kpiDias');
+  const totalEl = document.getElementById('total'); const chartCanvas = document.getElementById('chart'); const ctx = chartCanvas.getContext('2d');
 
-  // ===== overrides salvos no navegador (persistência após F5) =====
-  let overrides;
-  try {
-    const raw = localStorage.getItem('meedsOverridesV1');
-    if (raw) {
-      overrides = JSON.parse(raw);
-    } else {
-      overrides = {"Outubro 2025": {}, "Novembro 2025": {}};
-    }
-  } catch(e) {
-    overrides = {"Outubro 2025": {}, "Novembro 2025": {}};
-  }
-
-  function salvarOverrides() {
-    try {
-      localStorage.setItem('meedsOverridesV1', JSON.stringify(overrides));
-    } catch(e) {
-      console.warn("Não foi possível salvar overrides no localStorage:", e);
-    }
-  }
-
-  function parseBR(d){
-    const [dd,mm,yyyy]=d.split('/');
-    return new Date(`${yyyy}-${mm}-${dd}`);
-  }
-
-  function renderTable(rows){
-    tbody.innerHTML = rows.map(r =>
-      `<tr><td>${r["Data"]}</td><td>${r["Atendido Por"]}</td><td>${r["Qtd Atendimentos"]}</td></tr>`
-    ).join('');
-  }
-
-  function applyFilters(){
-    const txt=(q.value||'').toLowerCase();
-    const sVal=start.value?new Date(start.value):null;
-    const eVal=end.value?new Date(end.value):null;
-
-    Array.from(tbody.rows).forEach(tr=>{
-      const dataText=tr.cells[0].innerText.trim();
-      const medico=tr.cells[1].innerText.toLowerCase();
-      const d=dataText?parseBR(dataText):null;
-
-      let show=true;
-      if(txt && !medico.includes(txt) && !dataText.includes(txt)) show=false;
-      if(sVal && d && d<sVal) show=false;
-      if(eVal && d && d>eVal) show=false;
-      tr.style.display=show?'':'none';
-    });
-
-    recomputeTotal();
-  }
-
-  function recomputeTotal(){
-    let total=0;
-    Array.from(tbody.rows).forEach(tr=>{
-      if(tr.style.display==='none') return;
-      total+=Number(tr.cells[2].innerText)||0;
-    });
-    totalEl.textContent=total.toLocaleString('pt-BR');
-  }
-
-  function computeKPIs(rows){
-    const total=rows.reduce((s,r)=>s+(Number(r["Qtd Atendimentos"])||0),0);
-    const med=[...new Set(rows.map(r=>r["Atendido Por"]))].filter(Boolean).length;
-    const dias=[...new Set(rows.map(r=>r["Data"]))].filter(Boolean).length;
-    kpiTotal.textContent=total.toLocaleString('pt-BR');
-    kpiMedicos.textContent=med;
-    kpiDias.textContent=dias;
-  }
-
-  function computeTop3(rows){
-    const map=new Map();
-    rows.forEach(r=>{
-      const k=r["Atendido Por"]||"";
-      const v=Number(r["Qtd Atendimentos"])||0;
-      map.set(k,(map.get(k)||0)+v);
-    });
-    return Array.from(map.entries())
-      .filter(([k])=>k)
-      .sort((a,b)=>b[1]-a[1])
-      .slice(0,3);
-  }
-
-  function drawChart(top){
-    const W=chartCanvas.clientWidth, H=chartCanvas.clientHeight;
-    chartCanvas.width=W*devicePixelRatio;
-    chartCanvas.height=H*devicePixelRatio;
-    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-    ctx.clearRect(0,0,W,H);
-
-    const pad=40, innerW=W-pad*2, innerH=H-pad*2;
-    const maxVal=Math.max(1,...top.map(t=>t[1]));
-    ctx.strokeStyle='rgba(255,255,255,.25)';
-    ctx.beginPath();
-    ctx.moveTo(pad,pad);
-    ctx.lineTo(pad,H-pad);
-    ctx.lineTo(W-pad,H-pad);
-    ctx.stroke();
-
-    const n=top.length;
-    const barW=n?innerW/(n*1.5):0;
-    const gap=n?(innerW-barW*n)/(n+1):0;
-    ctx.textAlign='center';
-    ctx.font='12px system-ui';
-    ctx.fillStyle='#FFC700';
-
-    top.forEach(([name,val],i)=>{
-      const x=pad+gap*(i+1)+barW*i;
-      const h=(val/maxVal)*(innerH-10);
-      const y=H-pad-h;
-      ctx.fillRect(x,y,barW,h);
-      ctx.fillStyle='rgba(255,255,255,.95)';
-      ctx.fillText(val,x+barW/2,y-6);
-      ctx.fillText(String(name).slice(0,22),x+barW/2,H-pad+14);
-      ctx.fillStyle='#FFC700';
-    });
-  }
-
-  // NOVO: preenche os cards Top 3
-  function renderTopCards(rows) {
-    if (!cardsTop) return;
-    const total = rows.reduce((s,r)=>s+(Number(r["Qtd Atendimentos"])||0),0);
-    const top = computeTop3(rows);
-    cardsTop.innerHTML = top.map(([nome, qtd], idx) => {
-      const perc = total ? ((qtd / total) * 100).toFixed(1) : '0.0';
-      const pos = idx + 1;
-      return `
-        <div class="card">
-          <h3>#${pos} - ${nome}</h3>
-          <p><strong>${qtd}</strong> atendimentos (${perc}% do total)</p>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function getRows(city){
-    const pack=datasetsByMonth[currentMonth]||{};
-    const ovByMonth = overrides[currentMonth] || {};
-    if (ovByMonth[city] && ovByMonth[city].length) {
-      return ovByMonth[city];
-    }
-    return (pack[city]||[]);
-  }
-
-  function renderCity(){
-    const city=citySel.value;
-    cityName.textContent=city;
-    const rows=getRows(city)||[];
-    renderTable(rows);
-    computeKPIs(rows);
-    renderTopCards(rows);    // preenche os cards
-    drawChart(computeTop3(rows));
-    applyFilters();
-  }
-
-  // ===== Upload de Excel e sobrescrita de dados (com persistência) =====
-  if (excelInput) {
-    excelInput.addEventListener('change', handleExcelFile, false);
-  }
-
-  function handleExcelFile(evt){
-    const file = evt.target.files && evt.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e){
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type:'array' });
-      const firstSheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[firstSheetName];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval:null });
-
-      const registros = processarLinhasExcel(rows);
-      const city = citySel.value;
-
-      if (!overrides[currentMonth]) {
-        overrides[currentMonth] = {};
-      }
-      overrides[currentMonth][city] = registros;
-      salvarOverrides();
-      renderCity();
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  function processarLinhasExcel(linhas){
-    if (!linhas || !linhas.length) return [];
-
-    const exemplo = linhas[0];
-    const colData = encontrarColuna(exemplo, ['data','data atendimento','dia']);
-    const colMed  = encontrarColuna(exemplo, ['atendido por','atendido','médico','medico','profissional']);
-    let   colQtd  = encontrarColuna(exemplo, ['qtd','quantidade','qtd atendimentos']);
-
-    if (!colData || !colMed) {
-      alert('Não consegui identificar colunas de Data e Médico/Profissional no Excel. Verifique os nomes das colunas.');
-      console.log('Colunas no arquivo:', Object.keys(exemplo));
-      return [];
-    }
-
-    const usarQtd = !!colQtd;
-    const mapa = new Map();
-
-    linhas.forEach(l=>{
-      const rawData = l[colData];
-      const medico  = l[colMed] || 'nan';
-      const qtd     = usarQtd ? Number(l[colQtd] || 0) : 1;
-
-      if (!rawData) return;
-
-      const dataFormatada = formatarDataBR(rawData);
-      if (!dataFormatada) return;
-
-      const chave = dataFormatada + '||' + medico;
-      const atual = mapa.get(chave) || 0;
-      const acrescimo = isNaN(qtd) ? 0 : qtd;
-      mapa.set(chave, atual + acrescimo);
-    });
-
-    const registros = [];
-    mapa.forEach((valor,chave)=>{
-      const [data,medico] = chave.split('||');
-      registros.push({
-        Data:data,
-        "Atendido Por":medico,
-        "Qtd Atendimentos":valor
-      });
-    });
-
-    return registros;
-  }
-
-  function encontrarColuna(exemplo,candidatos){
-    const cols = Object.keys(exemplo);
-    let melhor = null;
-    cols.forEach(c=>{
-      const nome = String(c).toLowerCase().trim();
-      candidatos.forEach(padrao=>{
-        if (nome.includes(padrao)) {
-          melhor = c;
-        }
-      });
-    });
-    return melhor;
-  }
-
-  function formatarDataBR(valor){
-    if (!valor) return null;
-
-    if (typeof valor === 'string' && valor.includes('/')) {
-      const partes = valor.split('/');
-      if (partes.length===3) {
-        const [dd,mm,aa] = partes;
-        if (dd.length===2 && mm.length===2) return `${dd}/${mm}/${aa}`;
-      }
-    }
-
-    if (typeof valor === 'number') {
-      const dataBase = new Date(1899,11,30);
-      const d = new Date(dataBase.getTime() + valor*24*60*60*1000);
-      return dataParaBR(d);
-    }
-
-    const d = new Date(valor);
-    if (!isNaN(d.getTime())) {
-      return dataParaBR(d);
-    }
-
-    return null;
-  }
-
-  function dataParaBR(d){
-    const dd = String(d.getDate()).padStart(2,'0');
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const aa = d.getFullYear();
-    return `${dd}/${mm}/${aa}`;
-  }
-
-  // ===== Listeners padrão =====
-  citySel.addEventListener('change', renderCity);
-  q.addEventListener('input', applyFilters);
-  start.addEventListener('change', applyFilters);
-  end.addEventListener('change', applyFilters);
-  clearBtn.addEventListener('click', ()=>{
-    q.value='';
-    start.value='';
-    end.value='';
-    applyFilters();
-  });
-
-  document.getElementById('monthSeg').addEventListener('click',(e)=>{
-    if(e.target.tagName!=='BUTTON') return;
-    document.querySelectorAll('#monthSeg button').forEach(b=>b.classList.remove('active'));
-    e.target.classList.add('active');
-    currentMonth = e.target.dataset.month;
-    renderCity();
-  });
-
-  // Inicializa
+  function parseBR(d){ const [dd,mm,yyyy]=d.split('/'); return new Date(`${yyyy}-${mm}-${dd}`); }
+  function renderTable(rows){ tbody.innerHTML = rows.map(r=>`<tr><td>${r["Data"]}</td><td>${r["Atendido Por"]}</td><td>${r["Qtd Atendimentos"]}</td></tr>`).join(''); }
+  function applyFilters(){ const txt=(q.value||'').toLowerCase(); const sVal=start.value?new Date(start.value):null; const eVal=end.value?new Date(end.value):null;
+    Array.from(tbody.rows).forEach(tr=>{ const dataText=tr.cells[0].innerText.trim(); const medico=tr.cells[1].innerText.toLowerCase(); const d=dataText?parseBR(dataText):null;
+      let show=true; if(txt && !medico.includes(txt) && !dataText.includes(txt)) show=false; if(sVal && d && d<sVal) show=false; if(eVal && d && d>eVal) show=false; tr.style.display=show?'':''; });
+    recomputeTotal(); }
+  function recomputeTotal(){ let total=0; Array.from(tbody.rows).forEach(tr=>{ if(tr.style.display==='none') return; total+=Number(tr.cells[2].innerText)||0; }); totalEl.textContent=total.toLocaleString('pt-BR'); }
+  function computeKPIs(rows){ const total=rows.reduce((s,r)=>s+(Number(r["Qtd Atendimentos"])||0),0); const med=[...new Set(rows.map(r=>r["Atendido Por"]))].filter(Boolean).length; const dias=[...new Set(rows.map(r=>r["Data"]))].filter(Boolean).length;
+    kpiTotal.textContent=total.toLocaleString('pt-BR'); kpiMedicos.textContent=med; kpiDias.textContent=dias; }
+  function computeTop3(rows){ const map=new Map(); rows.forEach(r=>{ const k=r["Atendido Por"]||""; const v=Number(r["Qtd Atendimentos"])||0; map.set(k,(map.get(k)||0)+v); });
+    return Array.from(map.entries()).filter(([k])=>k).sort((a,b)=>b[1]-a[1]).slice(0,3); }
+  function drawChart(top){ const W=chartCanvas.clientWidth, H=chartCanvas.clientHeight; chartCanvas.width=W*devicePixelRatio; chartCanvas.height=H*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    ctx.clearRect(0,0,W,H); const pad=40, innerW=W-pad*2, innerH=H-pad*2, maxVal=Math.max(1,...top.map(t=>t[1])); ctx.strokeStyle='rgba(255,255,255,.25)';
+    ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
+    const n=top.length, barW=n?innerW/(n*1.5):0, gap=n?(innerW-barW*n)/(n+1):0; ctx.textAlign='center'; ctx.font='12px system-ui'; ctx.fillStyle='#FFC700';
+    top.forEach(([name,val],i)=>{ const x=pad+gap*(i+1)+barW*i; const h=(val/maxVal)*(innerH-10); const y=H-pad-h; ctx.fillRect(x,y,barW,h);
+      ctx.fillStyle='rgba(255,255,255,.95)'; ctx.fillText(val,x+barW/2,y-6); ctx.fillText(String(name).slice(0,22),x+barW/2,H-pad+14); ctx.fillStyle='#FFC700'; }); }
+  function getRows(city){ const pack=datasetsByMonth[currentMonth]||{}; return (pack[city]||[]); }
+  function renderCity(){ const city=citySel.value; cityName.textContent=city; const rows=getRows(city)||[]; renderTable(rows); computeKPIs(rows); drawChart(computeTop3(rows)); applyFilters(); }
+  citySel.addEventListener('change', renderCity); q.addEventListener('input', applyFilters); start.addEventListener('change', applyFilters); end.addEventListener('change', applyFilters);
+  clearBtn.addEventListener('click', ()=>{ q.value=''; start.value=''; end.value=''; applyFilters(); });
+  document.getElementById('monthSeg').addEventListener('click', (e)=>{ if(e.target.tagName!=='BUTTON') return; document.querySelectorAll('#monthSeg button').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); currentMonth = e.target.dataset.month; renderCity(); });
   renderCity();
 </script>
 </body>
