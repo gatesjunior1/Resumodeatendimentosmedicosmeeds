@@ -12,7 +12,7 @@
   .subtitle{margin-left:auto;color:var(--muted);font-size:12px}
   .container{max-width:var(--maxw);margin:0 auto;padding:18px}
   h1{margin:16px 0 6px;font-size:26px;letter-spacing:.2px;color:var(--accent)}
-  .row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
+  .row{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center}
   .selector label{margin-right:6px}
   select,input[type="date"],input[type="text"],button{background:#0e1529;color:var(--text);border:1px solid #203156;border-radius:10px;padding:8px 10px}
   .seg{display:inline-flex;border:1px solid #203156;border-radius:10px;overflow:hidden}
@@ -30,6 +30,14 @@
   table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border-bottom:1px dashed #203156;padding:9px;font-size:14px}
   th{color:#cfe1ff;text-align:left;background:#0e1529;position:sticky;top:0;z-index:1}tbody tr:hover{background:rgba(255,199,0,.06)}
   .total{margin-top:12px;padding:10px;background:rgba(255,199,0,.1);border:1px solid rgba(255,199,0,.3);border-radius:12px}
+
+  .heatmap-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:8px}
+  .heatmap-cell{padding:10px;border-radius:10px;text-align:center;font-size:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+  .heatmap-value{display:block;margin-top:4px;font-weight:600}
+  #panelEspecialidade{display:none}
+  #especialidadeSel:disabled{opacity:.5;cursor:not-allowed}
+  .lista-esp{margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}
+
 </style>
 </head>
 <body>
@@ -38,7 +46,7 @@
     <div class="row">
       <div><h1>Resumo de Atendimentos Dos Médicos</h1><p class="city">Município: <strong id="cityName">Coronel Fabriciano</strong></p></div>
       <div class="selector"><label for="city">Cidade:</label>
-        <select id="city"><option>Macaé</option><option>Coronel Fabriciano</option><option>Ouro Branco</option><option>Igaratinga</option></select>
+        <select id="city"><option>Macaé</option><option>Coronel Fabriciano</option><option>Ouro Branco</option><option>Igaratinga</option><option>Aricanduva</option></select>
       </div>
       <div class="selector" style="justify-self:end">
         <div class="seg" id="monthSeg">
@@ -46,59 +54,385 @@
           <button data-month="Novembro 2025" class="active">Novembro</button>
         </div>
       </div>
+      <div class="selector">
+        <div class="seg" id="modeSeg">
+          <button data-mode="medico" class="active">Por Médico</button>
+          <button data-mode="especialidade">Por Especialidade</button>
+        </div>
+      </div>
     </div>
     <div class="kpis">
       <div class="kpi"><div class="label">Total de atendimentos</div><div class="value" id="kpiTotal">0</div></div>
-      <div class="kpi"><div class="label">Médicos únicos</div><div class="value" id="kpiMedicos">0</div></div>
+      <div class="kpi"><div class="label" id="kpi2Label">Médicos únicos</div><div class="value" id="kpiMedicos">0</div></div>
       <div class="kpi"><div class="label">Dias cobertos</div><div class="value" id="kpiDias">0</div></div>
     </div>
     <div class="cards"><div class="cards-inner" id="cardsTop"></div></div>
-    <div class="chart"><h3>Top 3 Médicos</h3><canvas id="chart"></canvas></div>
+    <div class="chart"><h3 id="chartTitle">Top 3 Médicos</h3><canvas id="chart"></canvas></div>
+    <div class="chart"><h3 id="evolTitle">Evolução diária</h3><canvas id="chartEvol"></canvas></div>
     <div class="panel">
-      <div class="controls" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:center">
+      <div class="controls" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:center">
         <input type="text" id="q" placeholder="Buscar por médico ou data (dd/mm/aaaa)"/>
-        <input type="date" id="start"/><input type="date" id="end"/><button id="clear">Limpar</button>
+        <input type="date" id="start"/><input type="date" id="end"/><select id="especialidadeSel"><option value="">Todas especialidades</option></select><button id="clear">Limpar</button>
       </div>
       <table id="tabela"><thead><tr><th>Data</th><th>Atendido Por</th><th>Qtd Atendimentos</th></tr></thead><tbody></tbody></table>
       <div class="total">Total geral (considerando filtros): <strong id="total">0</strong></div>
     </div>
+    <div class="panel" id="panelEspecialidade">
+      <h3 id="tituloEsp">Médicos por especialidade</h3>
+      <ul id="listaEsp" class="lista-esp"></ul>
+    </div>
+    <div class="panel" id="panelHeatmap">
+      <h3>Mapa de calor por dia da semana</h3>
+      <div class="heatmap-grid" id="heatmapGrid"></div>
+    </div>
   </div>
+
 
 <script>
   const datasetsOut = {"Coronel Fabriciano": [{"Data": "01/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 9}, {"Data": "01/10/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 4}, {"Data": "02/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 7}, {"Data": "03/10/2025", "Atendido Por": "KAREN SANTOS LIMA", "Qtd Atendimentos": 4}, {"Data": "06/10/2025", "Atendido Por": "DAFNE MARIA VILLAR GONCALVES", "Qtd Atendimentos": 2}, {"Data": "06/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 5}, {"Data": "07/10/2025", "Atendido Por": "DAFNE MARIA VILLAR GONCALVES", "Qtd Atendimentos": 10}, {"Data": "07/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 7}, {"Data": "08/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 2}, {"Data": "15/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 4}, {"Data": "15/10/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 4}, {"Data": "16/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 9}, {"Data": "16/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 7}, {"Data": "17/10/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 7}, {"Data": "20/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 8}, {"Data": "21/10/2025", "Atendido Por": "DAFNE MARIA VILLAR GONCALVES", "Qtd Atendimentos": 9}, {"Data": "21/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 9}, {"Data": "22/10/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 2}, {"Data": "22/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 8}, {"Data": "23/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 3}, {"Data": "23/10/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 9}, {"Data": "24/10/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 7}], "Ouro Branco": [{"Data": "01/10/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Qtd Atendimentos": 8}, {"Data": "01/10/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 4}, {"Data": "01/10/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 1}, {"Data": "01/10/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 11}, {"Data": "01/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "02/10/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 3}, {"Data": "02/10/2025", "Atendido Por": "IARA OLIVEIRA ALVES", "Qtd Atendimentos": 5}, {"Data": "02/10/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 6}, {"Data": "02/10/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 1}, {"Data": "02/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "03/10/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 4}, {"Data": "03/10/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Qtd Atendimentos": 5}, {"Data": "03/10/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 6}, {"Data": "03/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "06/10/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 3}, {"Data": "06/10/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 7}, {"Data": "06/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "07/10/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 2}, {"Data": "07/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "08/10/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 5}, {"Data": "08/10/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 8}, {"Data": "08/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "09/10/2025", "Atendido Por": "MÉDICO TESTE NOVETECH", "Qtd Atendimentos": 3}, {"Data": "16/10/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Qtd Atendimentos": 1}, {"Data": "16/10/2025", "Atendido Por": "IARA OLIVEIRA ALVES", "Qtd Atendimentos": 4}, {"Data": "16/10/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 7}, {"Data": "17/10/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Qtd Atendimentos": 5}, {"Data": "17/10/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 6}, {"Data": "20/10/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Qtd Atendimentos": 5}, {"Data": "20/10/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 2}, {"Data": "20/10/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 5}, {"Data": "21/10/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 2}, {"Data": "22/10/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Qtd Atendimentos": 7}, {"Data": "22/10/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 4}, {"Data": "22/10/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 5}, {"Data": "23/10/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Qtd Atendimentos": 1}, {"Data": "23/10/2025", "Atendido Por": "IARA OLIVEIRA ALVES", "Qtd Atendimentos": 3}, {"Data": "23/10/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 8}], "Igaratinga": [{"Data": "02/10/2025", "Atendido Por": "nan", "Qtd Atendimentos": 1}, {"Data": "03/10/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 2}, {"Data": "06/10/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 3}, {"Data": "06/10/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 2}, {"Data": "14/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 1}, {"Data": "15/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 7}, {"Data": "16/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 3}, {"Data": "17/10/2025", "Atendido Por": "MARIA CECILIA CARVALHO CORRADO", "Qtd Atendimentos": 2}, {"Data": "17/10/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 1}, {"Data": "20/10/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 2}, {"Data": "20/10/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 3}, {"Data": "21/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 4}, {"Data": "21/10/2025", "Atendido Por": "KAROLINE SPÓSITO DAS VIRGENS", "Qtd Atendimentos": 2}, {"Data": "22/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 7}, {"Data": "23/10/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 5}, {"Data": "23/10/2025", "Atendido Por": "VIVIAN OLIVEIRA VIANA", "Qtd Atendimentos": 2}, {"Data": "24/10/2025", "Atendido Por": "MARIA CECILIA CARVALHO CORRADO", "Qtd Atendimentos": 1}, {"Data": "27/10/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 1}]};
-  const datasetsNov = {"Ouro Branco": [{"Data": "03/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Qtd Atendimentos": 4}, {"Data": "03/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 2}, {"Data": "03/11/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 5}, {"Data": "04/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 2}, {"Data": "04/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Qtd Atendimentos": 10}, {"Data": "05/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 4}, {"Data": "05/11/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 7}, {"Data": "06/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 2}, {"Data": "06/11/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Qtd Atendimentos": 4}, {"Data": "06/11/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 5}, {"Data": "07/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 2}, {"Data": "07/11/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Qtd Atendimentos": 1}, {"Data": "07/11/2025", "Atendido Por": "JOSE SONGLEI DA SILVA ROCHA", "Qtd Atendimentos": 1}, {"Data": "07/11/2025", "Atendido Por": "JOYCE CARVALHO MARTINS", "Qtd Atendimentos": 1}, {"Data": "07/11/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 4}, {"Data": "10/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Qtd Atendimentos": 7}, {"Data": "10/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 4}, {"Data": "10/11/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 3}, {"Data": "11/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 1}, {"Data": "12/11/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Qtd Atendimentos": 1}, {"Data": "12/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Qtd Atendimentos": 1}, {"Data": "12/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 2}, {"Data": "12/11/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 5}, {"Data": "13/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 2}, {"Data": "13/11/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Qtd Atendimentos": 1}, {"Data": "13/11/2025", "Atendido Por": "IARA OLIVEIRA ALVES", "Qtd Atendimentos": 3}, {"Data": "13/11/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Qtd Atendimentos": 3}, {"Data": "13/11/2025", "Atendido Por": "VINICIUS RIBEIRO JEUNON", "Qtd Atendimentos": 1}, {"Data": "14/11/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Qtd Atendimentos": 4}, {"Data": "14/11/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Qtd Atendimentos": 1}, {"Data": "14/11/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 4}, {"Data": "17/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Qtd Atendimentos": 6}, {"Data": "17/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 4}, {"Data": "17/11/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Qtd Atendimentos": 2}, {"Data": "18/11/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 3}, {"Data": "19/11/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 2}, {"Data": "19/11/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Qtd Atendimentos": 4}], "Igaratinga": [{"Data": "03/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 1}, {"Data": "03/11/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 1}, {"Data": "04/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 3}, {"Data": "04/11/2025", "Atendido Por": "KAROLINE SPÓSITO DAS VIRGENS", "Qtd Atendimentos": 1}, {"Data": "04/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 10}, {"Data": "06/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 2}, {"Data": "06/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 2}, {"Data": "10/11/2025", "Atendido Por": "JULIANA CRISTINA DE OLIVEIRA MIGUEL", "Qtd Atendimentos": 1}, {"Data": "10/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 1}, {"Data": "11/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 2}, {"Data": "11/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 2}, {"Data": "12/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 2}, {"Data": "13/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 8}, {"Data": "13/11/2025", "Atendido Por": "VIVIAN OLIVEIRA VIANA", "Qtd Atendimentos": 1}, {"Data": "14/11/2025", "Atendido Por": "MARIA CECILIA CARVALHO CORRADO", "Qtd Atendimentos": 2}, {"Data": "17/11/2025", "Atendido Por": "JULIANA CRISTINA DE OLIVEIRA MIGUEL", "Qtd Atendimentos": 1}, {"Data": "17/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 1}, {"Data": "17/11/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Qtd Atendimentos": 3}, {"Data": "18/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 5}, {"Data": "18/11/2025", "Atendido Por": "KAROLINE SPÓSITO DAS VIRGENS", "Qtd Atendimentos": 1}, {"Data": "18/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Qtd Atendimentos": 2}, {"Data": "19/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Qtd Atendimentos": 2}], "Coronel Fabriciano": [{"Data": "05/11/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 8}, {"Data": "06/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 5}, {"Data": "07/11/2025", "Atendido Por": "KAREN SANTOS LIMA", "Qtd Atendimentos": 8}, {"Data": "10/11/2025", "Atendido Por": "BIANCA MALUF TARRAF", "Qtd Atendimentos": 7}, {"Data": "10/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 7}, {"Data": "11/11/2025", "Atendido Por": "MARIANA BARBATO ZOCAL", "Qtd Atendimentos": 7}, {"Data": "11/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 8}, {"Data": "12/11/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 9}, {"Data": "12/11/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 7}, {"Data": "14/11/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Qtd Atendimentos": 8}, {"Data": "17/11/2025", "Atendido Por": "DAFNE MARIA VILLAR GONCALVES", "Qtd Atendimentos": 8}, {"Data": "17/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 3}, {"Data": "18/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 4}, {"Data": "19/11/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Qtd Atendimentos": 2}, {"Data": "19/11/2025", "Atendido Por": "MARCOS DE CASTRO HERMUCHE", "Qtd Atendimentos": 1}], "Macaé": [{"Data": "04/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 11}, {"Data": "04/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 4}, {"Data": "06/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 11}, {"Data": "07/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 7}, {"Data": "07/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 8}, {"Data": "10/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 21}, {"Data": "10/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 7}, {"Data": "11/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Qtd Atendimentos": 14}, {"Data": "11/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 26}, {"Data": "12/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 23}, {"Data": "12/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Qtd Atendimentos": 3}, {"Data": "12/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 6}, {"Data": "13/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 20}, {"Data": "13/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Qtd Atendimentos": 7}, {"Data": "13/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Qtd Atendimentos": 5}, {"Data": "14/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 28}, {"Data": "14/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Qtd Atendimentos": 3}, {"Data": "14/11/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 22}, {"Data": "17/11/2025", "Atendido Por": "ANGELICA CRISTINA RIBEIRO LAGARES", "Qtd Atendimentos": 16}, {"Data": "17/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Qtd Atendimentos": 16}, {"Data": "17/11/2025", "Atendido Por": "VINICIUS RIBEIRO JEUNON", "Qtd Atendimentos": 12}, {"Data": "18/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Qtd Atendimentos": 9}, {"Data": "18/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Qtd Atendimentos": 21}, {"Data": "18/11/2025", "Atendido Por": "JOÃO PAULO AUGUSTO CORA", "Qtd Atendimentos": 14}, {"Data": "18/11/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 18}, {"Data": "19/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Qtd Atendimentos": 24}, {"Data": "19/11/2025", "Atendido Por": "HENRIQUE ARAUJO ROSSI", "Qtd Atendimentos": 2}, {"Data": "19/11/2025", "Atendido Por": "LÍVIA THAÍS RAMOS SOARES", "Qtd Atendimentos": 2}, {"Data": "19/11/2025", "Atendido Por": "MARIANA CAMPOS", "Qtd Atendimentos": 10}, {"Data": "19/11/2025", "Atendido Por": "VINICIUS RIBEIRO JEUNON", "Qtd Atendimentos": 17}]};
+  const datasetsNov = {"Ouro Branco": [{"Data": "03/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Especialidade": "ATENDIMENTO EM REUMATOLOGIA", "Qtd Atendimentos": 4}, {"Data": "03/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Especialidade": "ATENDIMENTO EM CLÍNICA MÉDICA", "Qtd Atendimentos": 2}, {"Data": "03/11/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Especialidade": "ALERGISTA / IMUNOLOGISTA", "Qtd Atendimentos": 5}, {"Data": "04/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Especialidade": "ATENDIMENTO EM CLÍNICA MÉDICA", "Qtd Atendimentos": 2}, {"Data": "04/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Especialidade": "UROLOGIA", "Qtd Atendimentos": 10}, {"Data": "05/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 4}, {"Data": "05/11/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Especialidade": "ATENDIMENTO EM ENDOCRINOLOGIA", "Qtd Atendimentos": 7}, {"Data": "06/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 2}, {"Data": "06/11/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Especialidade": "ATENDIMENTO EM NUTRIÇÃO", "Qtd Atendimentos": 4}, {"Data": "06/11/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Especialidade": "ATENDIMENTO EM NUTRIÇÃO", "Qtd Atendimentos": 5}, {"Data": "07/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Especialidade": "ATENDIMENTO EM CLÍNICA MÉDICA", "Qtd Atendimentos": 2}, {"Data": "07/11/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Especialidade": "ATENDIMENTO EM ENDOCRINOLOGIA", "Qtd Atendimentos": 1}, {"Data": "07/11/2025", "Atendido Por": "JOSE SONGLEI DA SILVA ROCHA", "Especialidade": "PSIQUIATRA", "Qtd Atendimentos": 1}, {"Data": "07/11/2025", "Atendido Por": "JOYCE CARVALHO MARTINS", "Especialidade": "NEUROPEDIATRA", "Qtd Atendimentos": 1}, {"Data": "07/11/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Especialidade": "HEMATOLOGISTA", "Qtd Atendimentos": 4}, {"Data": "10/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Especialidade": "ATENDIMENTO EM REUMATOLOGIA", "Qtd Atendimentos": 7}, {"Data": "10/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 4}, {"Data": "10/11/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Especialidade": "ALERGISTA / IMUNOLOGISTA", "Qtd Atendimentos": 3}, {"Data": "11/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 1}, {"Data": "12/11/2025", "Atendido Por": "BERNARDO XAVIER GOMES", "Especialidade": "UROLOGIA", "Qtd Atendimentos": 1}, {"Data": "12/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 1}, {"Data": "12/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 2}, {"Data": "12/11/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Especialidade": "ATENDIMENTO EM ENDOCRINOLOGIA", "Qtd Atendimentos": 5}, {"Data": "13/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 2}, {"Data": "13/11/2025", "Atendido Por": "GABRIELLE SOUZA RAMOS", "Especialidade": "ATENDIMENTO EM NUTRIÇÃO", "Qtd Atendimentos": 1}, {"Data": "13/11/2025", "Atendido Por": "IARA OLIVEIRA ALVES", "Especialidade": "ATENDIMENTO EM REUMATOLOGIA", "Qtd Atendimentos": 3}, {"Data": "13/11/2025", "Atendido Por": "KEITH ANNY GONÇALVES CÓCOLO DE SOUZA", "Especialidade": "ATENDIMENTO EM NUTRIÇÃO", "Qtd Atendimentos": 3}, {"Data": "13/11/2025", "Atendido Por": "VINICIUS RIBEIRO JEUNON", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 1}, {"Data": "14/11/2025", "Atendido Por": "ANDRÉ DA MATTA MACHADO FERNANDES", "Especialidade": "ATENDIMENTO EM ENDOCRINOLOGIA", "Qtd Atendimentos": 4}, {"Data": "14/11/2025", "Atendido Por": "LEONARDO BERTOLATO RIBEIRO", "Especialidade": "HEMATOLOGISTA", "Qtd Atendimentos": 1}, {"Data": "14/11/2025", "Atendido Por": "MARIANA CAMPOS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 4}, {"Data": "17/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Especialidade": "ATENDIMENTO EM REUMATOLOGIA", "Qtd Atendimentos": 6}, {"Data": "17/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 4}, {"Data": "17/11/2025", "Atendido Por": "LIA MARIA BASTOS PEIXOTO LEITÃO", "Especialidade": "ALERGISTA / IMUNOLOGISTA", "Qtd Atendimentos": 2}, {"Data": "18/11/2025", "Atendido Por": "MARIANA CAMPOS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 3}, {"Data": "19/11/2025", "Atendido Por": "MARIANA CAMPOS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 2}, {"Data": "19/11/2025", "Atendido Por": "VICTOR AMARAL FERREIRA DE AQUINO", "Especialidade": "ATENDIMENTO EM ENDOCRINOLOGIA", "Qtd Atendimentos": 4}, {"Data": "24/11/2025", "Atendido Por": "BARBARA PACHECO DE ASSIS", "Especialidade": "ATENDIMENTO EM REUMATOLOGIA", "Qtd Atendimentos": 6}, {"Data": "24/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 5}, {"Data": "24/11/2025", "Atendido Por": "JOYCE CARVALHO MARTINS", "Especialidade": "NEUROPEDIATRA", "Qtd Atendimentos": 5}], "Igaratinga": [{"Data": "03/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 1}, {"Data": "03/11/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 1}, {"Data": "04/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 3}, {"Data": "04/11/2025", "Atendido Por": "KAROLINE SPÓSITO DAS VIRGENS", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 1}, {"Data": "04/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 10}, {"Data": "06/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 2}, {"Data": "06/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 2}, {"Data": "10/11/2025", "Atendido Por": "JULIANA CRISTINA DE OLIVEIRA MIGUEL", "Especialidade": "ATENDIMENTO EM FONOAUDIOLOGIA", "Qtd Atendimentos": 1}, {"Data": "10/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 1}, {"Data": "11/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 2}, {"Data": "11/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 2}, {"Data": "12/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 2}, {"Data": "13/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 8}, {"Data": "13/11/2025", "Atendido Por": "VIVIAN OLIVEIRA VIANA", "Especialidade": "ATENDIMENTO EM NEUROLOGIA", "Qtd Atendimentos": 1}, {"Data": "14/11/2025", "Atendido Por": "MARIA CECILIA CARVALHO CORRADO", "Especialidade": "ATENDIMENTO EM NUTRIÇÃO", "Qtd Atendimentos": 2}, {"Data": "17/11/2025", "Atendido Por": "JULIANA CRISTINA DE OLIVEIRA MIGUEL", "Especialidade": "ATENDIMENTO EM FONOAUDIOLOGIA", "Qtd Atendimentos": 1}, {"Data": "17/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 1}, {"Data": "17/11/2025", "Atendido Por": "TANDÊ SALTARELLI MARTINS", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 3}, {"Data": "18/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 5}, {"Data": "18/11/2025", "Atendido Por": "KAROLINE SPÓSITO DAS VIRGENS", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 1}, {"Data": "18/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 3}, {"Data": "19/11/2025", "Atendido Por": "JULIANA CAROLINE DE PAULA MOREIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 3}, {"Data": "24/11/2025", "Atendido Por": "JULIANA CRISTINA DE OLIVEIRA MIGUEL", "Especialidade": "ATENDIMENTO EM FONOAUDIOLOGIA", "Qtd Atendimentos": 1}, {"Data": "24/11/2025", "Atendido Por": "RÂNIA ANDRADE LIMA", "Especialidade": "ATENDIMENTO EM PSIQUIATRIA", "Qtd Atendimentos": 4}], "Coronel Fabriciano": [{"Data": "05/11/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Especialidade": "ENDOCRINOLOGISTA", "Qtd Atendimentos": 8}, {"Data": "06/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 5}, {"Data": "07/11/2025", "Atendido Por": "KAREN SANTOS LIMA", "Especialidade": "REUMATOLOGISTA", "Qtd Atendimentos": 8}, {"Data": "10/11/2025", "Atendido Por": "BIANCA MALUF TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 7}, {"Data": "10/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 7}, {"Data": "11/11/2025", "Atendido Por": "MARIANA BARBATO ZOCAL", "Especialidade": "ENDOCRINOLOGISTA", "Qtd Atendimentos": 7}, {"Data": "11/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 8}, {"Data": "12/11/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Especialidade": "ENDOCRINOLOGISTA", "Qtd Atendimentos": 9}, {"Data": "12/11/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 7}, {"Data": "14/11/2025", "Atendido Por": "MARCELO DREY GONÇALVES", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 8}, {"Data": "17/11/2025", "Atendido Por": "DAFNE MARIA VILLAR GONCALVES", "Especialidade": "ANGIOLOGISTA", "Qtd Atendimentos": 8}, {"Data": "17/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 3}, {"Data": "18/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 4}, {"Data": "19/11/2025", "Atendido Por": "GUILHERME VENÂNCIO DA SILVA NETO", "Especialidade": "ENDOCRINOLOGISTA", "Qtd Atendimentos": 3}, {"Data": "19/11/2025", "Atendido Por": "MARCOS DE CASTRO HERMUCHE", "Especialidade": "ORTOPEDIA", "Qtd Atendimentos": 1}, {"Data": "24/11/2025", "Atendido Por": "BIANCA MALUF TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 6}, {"Data": "24/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 8}], "Macaé": [{"Data": "04/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "ATENDIMENTO EM CLÍNICA MÉDICA", "Qtd Atendimentos": 11}, {"Data": "04/11/2025", "Atendido Por": "NEMER MARTINS TARRAF", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 1}, {"Data": "05/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "ATENDIMENTO EM CLÍNICA MÉDICA", "Qtd Atendimentos": 4}, {"Data": "06/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "ATENDIMENTO EM CLÍNICA MÉDICA", "Qtd Atendimentos": 11}, {"Data": "07/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Especialidade": "ATENDIMENTO EM CLÍNICA MÉDICA", "Qtd Atendimentos": 7}, {"Data": "07/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "ATENDIMENTO EM CLÍNICA MÉDICA", "Qtd Atendimentos": 8}, {"Data": "10/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 21}, {"Data": "10/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 7}, {"Data": "11/11/2025", "Atendido Por": "ANA CLARA DE ALMEIDA FREIRE", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 14}, {"Data": "11/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 26}, {"Data": "12/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 23}, {"Data": "12/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 3}, {"Data": "12/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 6}, {"Data": "13/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 20}, {"Data": "13/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 7}, {"Data": "13/11/2025", "Atendido Por": "GABRIEL ZEFERINO DE OLIVEIRA SOUZA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 5}, {"Data": "14/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 28}, {"Data": "14/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 3}, {"Data": "14/11/2025", "Atendido Por": "MARIANA CAMPOS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 22}, {"Data": "17/11/2025", "Atendido Por": "ANGELICA CRISTINA RIBEIRO LAGARES", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 16}, {"Data": "17/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 16}, {"Data": "17/11/2025", "Atendido Por": "VINICIUS RIBEIRO JEUNON", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 12}, {"Data": "18/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 9}, {"Data": "18/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 21}, {"Data": "18/11/2025", "Atendido Por": "JOÃO PAULO AUGUSTO CORA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 14}, {"Data": "18/11/2025", "Atendido Por": "MARIANA CAMPOS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 18}, {"Data": "19/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 3}, {"Data": "19/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 26}, {"Data": "19/11/2025", "Atendido Por": "HENRIQUE ARAUJO ROSSI", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 3}, {"Data": "19/11/2025", "Atendido Por": "LÍVIA THAÍS RAMOS SOARES", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 2}, {"Data": "19/11/2025", "Atendido Por": "MARIANA CAMPOS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 14}, {"Data": "19/11/2025", "Atendido Por": "VINICIUS RIBEIRO JEUNON", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 22}, {"Data": "24/11/2025", "Atendido Por": "ANGELICA CRISTINA RIBEIRO LAGARES", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 17}, {"Data": "24/11/2025", "Atendido Por": "CARLA ABREU DE BARROS", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 12}, {"Data": "24/11/2025", "Atendido Por": "DIEGO DUQUE DA SILVA", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 43}, {"Data": "24/11/2025", "Atendido Por": "GUILHERME HENRIQUE OLIVEIRA BORGES", "Especialidade": "CLÍNICO GERAL", "Qtd Atendimentos": 13}], "Aricanduva": [{"Data": "05/11/2025", "Atendido Por": "ROMUALDO DA SILVA GONÇALVES", "Especialidade": "CARDIOLOGIA", "Qtd Atendimentos": 1}, {"Data": "14/11/2025", "Atendido Por": "DANIELLE DOS SANTOS JUNQUEIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 1}, {"Data": "17/11/2025", "Atendido Por": "DANIELLE DOS SANTOS JUNQUEIRA", "Especialidade": "ATENDIMENTO EM PSICOLOGIA", "Qtd Atendimentos": 4}, {"Data": "18/11/2025", "Atendido Por": "LEONARDO THEREZA RODRIGUES PEREIRA", "Especialidade": "PNEUMOLOGISTA", "Qtd Atendimentos": 2}, {"Data": "24/11/2025", "Atendido Por": "LUCIANA TANAKA DE QUEIROZ", "Especialidade": "ATENDIMENTO EM NEUROLOGIA", "Qtd Atendimentos": 1}]};
   const datasetsByMonth = {"Outubro 2025": datasetsOut, "Novembro 2025": datasetsNov};
   let currentMonth = "Novembro 2025";
+  let currentMode = "medico";
+  let baseRows = [];
 
   const citySel = document.getElementById('city'), cityName = document.getElementById('cityName');
   const tbody = document.querySelector('#tabela tbody'), q = document.getElementById('q');
   const start = document.getElementById('start'), end = document.getElementById('end'), clearBtn = document.getElementById('clear');
   const kpiTotal = document.getElementById('kpiTotal'), kpiMedicos = document.getElementById('kpiMedicos'), kpiDias = document.getElementById('kpiDias');
-  const totalEl = document.getElementById('total'); const chartCanvas = document.getElementById('chart'); const ctx = chartCanvas.getContext('2d');
+  const kpi2Label = document.getElementById('kpi2Label');
+  const totalEl = document.getElementById('total');
+  const chartCanvas = document.getElementById('chart');
+  const ctx = chartCanvas.getContext('2d');
+  const chartEvolCanvas = document.getElementById('chartEvol');
+  const ctxEvol = chartEvolCanvas.getContext('2d');
+  const chartTitle = document.getElementById('chartTitle');
+  const evolTitle = document.getElementById('evolTitle');
+  const modeSeg = document.getElementById('modeSeg');
+  const espSel = document.getElementById('especialidadeSel');
+  const panelEsp = document.getElementById('panelEspecialidade');
+  const listaEsp = document.getElementById('listaEsp');
+  const tituloEsp = document.getElementById('tituloEsp');
+  const heatmapGrid = document.getElementById('heatmapGrid');
 
-  function parseBR(d){ const [dd,mm,yyyy]=d.split('/'); return new Date(`${yyyy}-${mm}-${dd}`); }
-  function renderTable(rows){ tbody.innerHTML = rows.map(r=>`<tr><td>${r["Data"]}</td><td>${r["Atendido Por"]}</td><td>${r["Qtd Atendimentos"]}</td></tr>`).join(''); }
-  function applyFilters(){ const txt=(q.value||'').toLowerCase(); const sVal=start.value?new Date(start.value):null; const eVal=end.value?new Date(end.value):null;
-    Array.from(tbody.rows).forEach(tr=>{ const dataText=tr.cells[0].innerText.trim(); const medico=tr.cells[1].innerText.toLowerCase(); const d=dataText?parseBR(dataText):null;
-      let show=true; if(txt && !medico.includes(txt) && !dataText.includes(txt)) show=false; if(sVal && d && d<sVal) show=false; if(eVal && d && d>eVal) show=false; tr.style.display=show?'':''; });
-    recomputeTotal(); }
-  function recomputeTotal(){ let total=0; Array.from(tbody.rows).forEach(tr=>{ if(tr.style.display==='none') return; total+=Number(tr.cells[2].innerText)||0; }); totalEl.textContent=total.toLocaleString('pt-BR'); }
-  function computeKPIs(rows){ const total=rows.reduce((s,r)=>s+(Number(r["Qtd Atendimentos"])||0),0); const med=[...new Set(rows.map(r=>r["Atendido Por"]))].filter(Boolean).length; const dias=[...new Set(rows.map(r=>r["Data"]))].filter(Boolean).length;
-    kpiTotal.textContent=total.toLocaleString('pt-BR'); kpiMedicos.textContent=med; kpiDias.textContent=dias; }
-  function computeTop3(rows){ const map=new Map(); rows.forEach(r=>{ const k=r["Atendido Por"]||""; const v=Number(r["Qtd Atendimentos"])||0; map.set(k,(map.get(k)||0)+v); });
-    return Array.from(map.entries()).filter(([k])=>k).sort((a,b)=>b[1]-a[1]).slice(0,3); }
-  function drawChart(top){ const W=chartCanvas.clientWidth, H=chartCanvas.clientHeight; chartCanvas.width=W*devicePixelRatio; chartCanvas.height=H*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-    ctx.clearRect(0,0,W,H); const pad=40, innerW=W-pad*2, innerH=H-pad*2, maxVal=Math.max(1,...top.map(t=>t[1])); ctx.strokeStyle='rgba(255,255,255,.25)';
+  function parseBR(d){
+    if(!d) return null;
+    const parts = d.split('/');
+    if(parts.length !== 3) return null;
+    const [dd,mm,yyyy]=parts;
+    return new Date(`${yyyy}-${mm}-${dd}`);
+  }
+
+  function normalizeEspecialidade(r){
+    return (r["Especialidade"] || "Não informado").toString().trim();
+  }
+
+  function renderTable(rows){
+    tbody.innerHTML = rows.map(r=>{
+      const esp = r["Especialidade"] || "";
+      const medico = r["Atendido Por"] || "";
+      const label = esp ? `${medico} - ${esp}` : medico;
+      const data = r["Data"] || "";
+      const qtd = r["Qtd Atendimentos"] || 0;
+      return `<tr><td>${data}</td><td>${label}</td><td>${qtd}</td></tr>`;
+    }).join('');
+  }
+
+  function applyFilters(){
+    const txt=(q.value||'').toLowerCase();
+    const sVal=start.value?new Date(start.value):null;
+    const eVal=end.value?new Date(end.value):null;
+    Array.from(tbody.rows).forEach(tr=>{
+      const dataText=tr.cells[0].innerText.trim();
+      const medico=tr.cells[1].innerText.toLowerCase();
+      const d=dataText?parseBR(dataText):null;
+      let show=true;
+      if(txt && !medico.includes(txt) && !dataText.includes(txt)) show=false;
+      if(sVal && d && d<sVal) show=false;
+      if(eVal && d && d>eVal) show=false;
+      tr.style.display=show?'':'none';
+    });
+    recomputeTotal();
+  }
+
+  function recomputeTotal(){
+    let total=0;
+    Array.from(tbody.rows).forEach(tr=>{
+      if(tr.style.display==='none') return;
+      total+=Number(tr.cells[2].innerText)||0;
+    });
+    totalEl.textContent=total.toLocaleString('pt-BR');
+  }
+
+  function computeKPIs(rows){
+    const total=rows.reduce((s,r)=>s+(Number(r["Qtd Atendimentos"])||0),0);
+    const dias=[...new Set(rows.map(r=>r["Data"]).filter(Boolean))].length;
+    if(currentMode==="medico"){
+      const med=[...new Set(rows.map(r=>r["Atendido Por"]).filter(Boolean))].length;
+      kpi2Label.textContent = "Médicos únicos";
+      kpiTotal.textContent=total.toLocaleString('pt-BR');
+      kpiMedicos.textContent=med;
+      kpiDias.textContent=dias;
+    } else {
+      const esp=[...new Set(rows.map(normalizeEspecialidade).filter(Boolean))].length;
+      const med=[...new Set(rows.map(r=>r["Atendido Por"]).filter(Boolean))].length;
+      kpi2Label.textContent = "Especialidades únicas";
+      kpiTotal.textContent=total.toLocaleString('pt-BR');
+      kpiMedicos.textContent=esp;
+      kpiDias.textContent=med;
+    }
+  }
+
+  function computeTop3(rows, by){
+    const map=new Map();
+    rows.forEach(r=>{
+      const key = by==="medico" ? (r["Atendido Por"]||"") : normalizeEspecialidade(r);
+      const v=Number(r["Qtd Atendimentos"])||0;
+      if(!key) return;
+      map.set(key,(map.get(key)||0)+v);
+    });
+    return Array.from(map.entries()).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  }
+
+  function drawChart(top){
+    const W=chartCanvas.clientWidth, H=chartCanvas.clientHeight;
+    chartCanvas.width=W*devicePixelRatio; chartCanvas.height=H*devicePixelRatio;
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    ctx.clearRect(0,0,W,H);
+    const pad=40, innerW=W-pad*2, innerH=H-pad*2;
+    const maxVal=Math.max(1,...top.map(t=>t[1]));
+    ctx.strokeStyle='rgba(255,255,255,.25)';
     ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.lineTo(W-pad,H-pad); ctx.stroke();
-    const n=top.length, barW=n?innerW/(n*1.5):0, gap=n?(innerW-barW*n)/(n+1):0; ctx.textAlign='center'; ctx.font='12px system-ui'; ctx.fillStyle='#FFC700';
-    top.forEach(([name,val],i)=>{ const x=pad+gap*(i+1)+barW*i; const h=(val/maxVal)*(innerH-10); const y=H-pad-h; ctx.fillRect(x,y,barW,h);
-      ctx.fillStyle='rgba(255,255,255,.95)'; ctx.fillText(val,x+barW/2,y-6); ctx.fillText(String(name).slice(0,22),x+barW/2,H-pad+14); ctx.fillStyle='#FFC700'; }); }
-  function getRows(city){ const pack=datasetsByMonth[currentMonth]||{}; return (pack[city]||[]); }
-  function renderCity(){ const city=citySel.value; cityName.textContent=city; const rows=getRows(city)||[]; renderTable(rows); computeKPIs(rows); drawChart(computeTop3(rows)); applyFilters(); }
-  citySel.addEventListener('change', renderCity); q.addEventListener('input', applyFilters); start.addEventListener('change', applyFilters); end.addEventListener('change', applyFilters);
-  clearBtn.addEventListener('click', ()=>{ q.value=''; start.value=''; end.value=''; applyFilters(); });
-  document.getElementById('monthSeg').addEventListener('click', (e)=>{ if(e.target.tagName!=='BUTTON') return; document.querySelectorAll('#monthSeg button').forEach(b=>b.classList.remove('active')); e.target.classList.add('active'); currentMonth = e.target.dataset.month; renderCity(); });
+    const n=top.length;
+    const barW=n?innerW/(n*1.5):0;
+    const gap=n?(innerW-barW*n)/(n+1):0;
+    ctx.textAlign='center'; ctx.font='12px system-ui'; ctx.fillStyle='#FFC700';
+    top.forEach(([name,val],i)=>{
+      const x=pad+gap*(i+1)+barW*i;
+      const h=(val/maxVal)*(innerH-10);
+      const y=H-pad-h;
+      ctx.fillRect(x,y,barW,h);
+      ctx.fillStyle='rgba(255,255,255,.95)';
+      ctx.fillText(val,x+barW/2,y-6);
+      ctx.fillText(String(name).slice(0,22),x+barW/2,H-pad+14);
+      ctx.fillStyle='#FFC700';
+    });
+  }
+
+  function drawEvolution(rows){
+    const W=chartEvolCanvas.clientWidth, H=chartEvolCanvas.clientHeight;
+    chartEvolCanvas.width=W*devicePixelRatio; chartEvolCanvas.height=H*devicePixelRatio;
+    ctxEvol.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    ctxEvol.clearRect(0,0,W,H);
+    const pad=40, innerW=W-pad*2, innerH=H-pad*2;
+    const map=new Map();
+    rows.forEach(r=>{
+      const d = r["Data"];
+      const v = Number(r["Qtd Atendimentos"])||0;
+      if(!d) return;
+      map.set(d,(map.get(d)||0)+v);
+    });
+    const arr = Array.from(map.entries()).sort((a,b)=>{
+      const da=parseBR(a[0]); const db=parseBR(b[0]);
+      return da-db;
+    });
+    if(arr.length===0) return;
+    const maxVal = Math.max(1,...arr.map(x=>x[1]));
+    ctxEvol.strokeStyle='rgba(255,255,255,.25)';
+    ctxEvol.beginPath(); ctxEvol.moveTo(pad,pad); ctxEvol.lineTo(pad,H-pad); ctxEvol.lineTo(W-pad,H-pad); ctxEvol.stroke();
+    const n = arr.length;
+    ctxEvol.textAlign='center'; ctxEvol.font='11px system-ui';
+    ctxEvol.fillStyle='rgba(255,255,255,.85)';
+    arr.forEach(([data,val],i)=>{
+      const t = n===1 ? 0.5 : (i/(n-1));
+      const x = pad + t*innerW;
+      const h = (val/maxVal)*(innerH-10);
+      const y = H-pad-h;
+      if(i===0){ ctxEvol.beginPath(); ctxEvol.moveTo(x,y); }
+      else { ctxEvol.lineTo(x,y); }
+    });
+    ctxEvol.strokeStyle='rgba(255,199,0,.9)';
+    ctxEvol.lineWidth=2;
+    ctxEvol.stroke();
+    arr.forEach(([data,val],i)=>{
+      const t = n===1 ? 0.5 : (i/(n-1));
+      const x = pad + t*innerW;
+      const h = (val/maxVal)*(innerH-10);
+      const y = H-pad-h;
+      ctxEvol.beginPath();
+      ctxEvol.arc(x,y,3,0,Math.PI*2);
+      ctxEvol.fillStyle='rgba(255,199,0,.95)';
+      ctxEvol.fill();
+      ctxEvol.fillStyle='rgba(255,255,255,.8)';
+      ctxEvol.fillText(val,x,y-8);
+      ctxEvol.save();
+      ctxEvol.translate(x,H-pad+18);
+      ctxEvol.rotate(-Math.PI/4);
+      ctxEvol.fillText(data,0,0);
+      ctxEvol.restore();
+    });
+  }
+
+  function populateEspecialidades(rows){
+    const set = new Set();
+    rows.forEach(r=>{
+      if(r["Especialidade"]) set.add(normalizeEspecialidade(r));
+    });
+    const options = ['<option value="">Todas especialidades</option>'].concat(
+      Array.from(set).sort().map(e=>`<option value="${e}">${e}</option>`)
+    );
+    espSel.innerHTML = options.join('');
+  }
+
+  function getRows(city){
+    const pack=datasetsByMonth[currentMonth]||{};
+    return (pack[city]||[]);
+  }
+
+  function getRowsForMode(){
+    let rows = baseRows.slice();
+    if(currentMode==="especialidade" && espSel && espSel.value){
+      const alvo = espSel.value;
+      rows = rows.filter(r=> normalizeEspecialidade(r)===alvo);
+    }
+    return rows;
+  }
+
+  function renderHeatmap(rows){
+    const counts = new Array(7).fill(0);
+    rows.forEach(r=>{
+      const d = parseBR(r["Data"]);
+      if(!d) return;
+      const idx = d.getDay();
+      const v = Number(r["Qtd Atendimentos"])||0;
+      counts[idx]+=v;
+    });
+    const max = Math.max(1,...counts);
+    const labels = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    heatmapGrid.innerHTML = labels.map((name,idx)=>{
+      const val = counts[idx] || 0;
+      const intensity = val/max;
+      const alpha = 0.2 + 0.6*intensity;
+      const bg = `rgba(255,199,0,${alpha})`;
+      return `<div class="heatmap-cell" style="background:${bg}"><div>${name}</div><span class="heatmap-value">${val}</span></div>`;
+    }).join('');
+  }
+
+  function renderTopCards(top, tipo){
+    const cardsTop = document.getElementById('cardsTop');
+    if(!cardsTop) return;
+    cardsTop.innerHTML = top.map(([nome,total])=>{
+      const labelTipo = tipo==="medico" ? "Médico" : "Especialidade";
+      return `<div class="card"><h3>${nome}</h3><p>${labelTipo} com <strong>${total}</strong> atendimentos no período selecionado.</p></div>`;
+    }).join('');
+  }
+
+  function renderMedicosPorEspecialidade(){
+    if(!panelEsp) return;
+    if(currentMode !== "especialidade"){
+      panelEsp.style.display = "";
+      tituloEsp.textContent = "Médicos por especialidade (disponível ao selecionar uma especialidade)";
+      listaEsp.innerHTML = "<li>Selecione o modo <strong>Por Especialidade</strong> e escolha uma especialidade acima.</li>";
+      return;
+    }
+    panelEsp.style.display = "";
+    const esp = espSel.value;
+    if(!esp){
+      tituloEsp.textContent = "Médicos por especialidade";
+      listaEsp.innerHTML = "<li>Selecione uma especialidade no campo acima para ver os médicos e seus totais de atendimentos.</li>";
+      return;
+    }
+    tituloEsp.textContent = "Médicos da especialidade: " + esp;
+    const map = new Map();
+    baseRows.forEach(r=>{
+      if(normalizeEspecialidade(r)!==esp) return;
+      const nome = r["Atendido Por"] || "Sem nome";
+      const v = Number(r["Qtd Atendimentos"])||0;
+      map.set(nome,(map.get(nome)||0)+v);
+    });
+    const lista = Array.from(map.entries()).sort((a,b)=>b[1]-a[1]);
+    listaEsp.innerHTML = lista.map(([nome,total])=>`<li>${nome}: <strong>${total}</strong> atendimentos</li>`).join('');
+  }
+
+  function updateTitles(){
+    if(currentMode==="medico"){
+      chartTitle.textContent = "Top 3 Médicos";
+      evolTitle.textContent = "Evolução diária (todos os médicos)";
+      panelEsp.style.display = "none";
+      espSel.disabled = true;
+    } else {
+      chartTitle.textContent = "Top 3 Especialidades";
+      if(espSel.value){
+        evolTitle.textContent = "Evolução diária - " + espSel.value;
+      } else {
+        evolTitle.textContent = "Evolução diária (todas as especialidades)";
+      }
+      panelEsp.style.display = "";
+      espSel.disabled = false;
+    }
+  }
+
+  function renderAll(){
+    const rowsForMode = getRowsForMode();
+    renderTable(rowsForMode);
+    computeKPIs(rowsForMode);
+    const top = computeTop3(rowsForMode, currentMode==="medico" ? "medico" : "especialidade");
+    renderTopCards(top, currentMode==="medico" ? "medico" : "especialidade");
+    drawChart(top);
+    drawEvolution(rowsForMode);
+    renderHeatmap(rowsForMode);
+    renderMedicosPorEspecialidade();
+    updateTitles();
+    applyFilters();
+  }
+
+  function renderCity(){
+    const city = citySel.value;
+    cityName.textContent = city;
+    baseRows = getRows(city) || [];
+    populateEspecialidades(baseRows);
+    espSel.value = "";
+    renderAll();
+  }
+
+  citySel.addEventListener('change', renderCity);
+  q.addEventListener('input', applyFilters);
+  start.addEventListener('change', applyFilters);
+  end.addEventListener('change', applyFilters);
+  clearBtn.addEventListener('click', ()=>{
+    q.value=''; start.value=''; end.value=''; applyFilters();
+  });
+
+  document.getElementById('monthSeg').addEventListener('click', (e)=>{
+    if(e.target.tagName!=='BUTTON') return;
+    document.querySelectorAll('#monthSeg button').forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentMonth = e.target.dataset.month;
+    renderCity();
+  });
+
+  if(modeSeg){
+    modeSeg.addEventListener('click',(e)=>{
+      if(e.target.tagName!=='BUTTON') return;
+      const modo = e.target.dataset.mode;
+      if(!modo || modo===currentMode) return;
+      document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.remove('active'));
+      e.target.classList.add('active');
+      currentMode = modo;
+      renderAll();
+    });
+  }
+
+  if(espSel){
+    espSel.addEventListener('change', ()=>{
+      if(currentMode==="especialidade"){
+        renderAll();
+      }
+    });
+  }
+
   renderCity();
 </script>
+
 </body>
 </html>
