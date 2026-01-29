@@ -45,7 +45,8 @@
   .chip{font-size:12px;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);padding:6px 10px;border-radius:999px}
   .chip strong{color:#1565C0;font-weight:600}
   .kpi .delta{margin-top:6px;font-size:12px;color:var(--muted)}
-  .panel h3{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .panel h3{margin:0 0 8px}
+  .panel-header h3{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0}
   .btn-sm{padding:7px 10px;border-radius:10px;cursor:pointer}
 
 
@@ -221,6 +222,35 @@ img, svg, canvas { max-width: 100%; height: auto; }
   .hint{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,193,7,.10);border:1px solid rgba(255,193,7,.25)}
   .hint strong{color:#8a6d00}
   .kpi-chip{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(30,136,229,.08);border:1px solid rgba(30,136,229,.18);font-size:12px;margin:6px 8px 0 0}
+
+
+/* Insights gerenciais (apenas visual — sem remover dados) */
+#panelInsights .panel-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#panelInsights #insightsList{list-style:none;padding-left:0;margin:10px 0 0;display:grid;gap:10px}
+#panelInsights #insightsList .insight-item{
+  margin:0;
+  padding:12px 14px;
+  border:1px solid #dbe7ff;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 8px 18px rgba(0,0,0,.04);
+  line-height:1.35;
+}
+#panelInsights #insightsList .insight-item strong{font-weight:700}
+#panelInsights #insightsList .insight-item br{content:''}
+#panelInsights #insightsList .insight-item span[style*="var(--muted)"]{display:inline-block;margin-top:6px}
+#panelInsights #insightsList .insight-item .muted{color:var(--muted)}
+#panelInsights #insightsList .insight-item ol,
+#panelInsights #insightsList .insight-item ul{
+  margin:8px 0 0 18px;
+}
+#panelInsights #insightsList .insight-item ol li,
+#panelInsights #insightsList .insight-item ul li{
+  padding:0;
+  border:none;
+  box-shadow:none;
+  margin:3px 0;
+}
 
 </style>
 </head>
@@ -1531,7 +1561,7 @@ function renderInsights(rows){
     insights.push(`🏆 <strong>Top 3 no período</strong>:<br/>${linhas}`);
   }
 
-  ul.innerHTML = insights.map(t=>`<li>${t}</li>`).join('');
+  ul.innerHTML = insights.map(t=>`<li class="insight-item">${t}</li>`).join('');
 }
 
   function updateAfterFilters(){
